@@ -1,0 +1,47 @@
+services:
+  mongo:
+    image: mongo:4.4.11
+    volumes:
+      - ./mongod.conf:/etc/mongod.conf
+      - ./data/mongodb/initdb.d/:/docker-entrypoint-initdb.d/
+      - ./data/db/:/data/db/
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootroot
+      MONGO_INITDB_DATABASE: development
+      MONGO_INITDB_USER: user
+      MONGO_INITDB_PWD: useruser
+    ports:
+      - 27018:27017
+    networks:
+      - backend
+  mosquitto:
+    image: eclipse-mosquitto:2.0.14-openssl
+    volumes:
+      - ./mosquitto/:/mosquitto/:rw
+    ports:
+      - 8883:8883
+      - 9001:9001
+  mqtt-gateway:
+    image: nghviet/mqtt-gateway:0.0.3
+    environment:
+      CA_FILE: ./ca.crt
+      MQTT_CRT: ./mqtt.crt
+      P_KEY: ./mqtt.key
+      MQTT_HOST: mqtts://112.137.129.202:8883
+      DB_USER: root
+      DB_PASSWORD: rootroot
+      DB_HOST: 112.137.129.202:27018
+      DB: development
+    networks:
+      - backend
+  api-gateway:
+    image: nghviet/api_gateway:latest
+    volumes:
+      - ./gateway:/home/nodejs:rw
+    ports:
+      - 8080:8080
+  login-gateway:
+    image: nghviet/login_gateway:latest
+  signer:
+    image: nghviet/signer
